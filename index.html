@@ -110,7 +110,7 @@
 
     // Настройки холста
     const aspectRatio = 16 / 9; // Соотношение сторон 16:9
-    canvas.width = window.innerWidth * 0.6; // Ширина 80% экрана
+    canvas.width = window.innerWidth * 0.8; // Ширина 80% экрана
     canvas.height = canvas.width / aspectRatio; // Высота по соотношению
     let brushColor = 'black'; // Цвет кисти
     let brushSize = 6; // Размер кисти
@@ -210,8 +210,7 @@
     // Функция для отправки запроса к API getimg.ai
     async function generateImage(prompt) {
       const apiKey = 'sk-bagNxClD282D1uAgLQUuxgKkAKNOFQ7OnPg9HMDVEsGJeYRd'; // ЗАМЕНИТЕ НА ВАШ API-КЛЮЧ
-      const url = 'https://platform.stability.ai/';
-
+      const url = 'https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/text-to-image';
       try {
         const response = await fetch(url, {
           method: 'POST',
