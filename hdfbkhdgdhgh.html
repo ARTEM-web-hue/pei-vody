@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Рисовалка</title>
   <style>
+    /* CSS */
     body {
       font-family: Arial, sans-serif;
       margin: 0;
@@ -96,63 +97,150 @@
   </div>
 
   <script>
-// Генерация рисунка через getimg.ai
-aiGenerate.addEventListener('click', async () => {
-  const description = aiInput.value.trim();
-  if (!description) {
-    alert('Введите описание!');
-    return;
-  }
+    // JavaScript
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const colors = document.querySelectorAll('.color');
+    const clearButton = document.getElementById('clearButton');
+    const brushSizeRange = document.getElementById('brushSize');
+    const circleButton = document.getElementById('circleButton');
+    const squareButton = document.getElementById('squareButton');
+    const aiInput = document.getElementById('aiInput');
+    const aiGenerate = document.getElementById('aiGenerate');
 
-  try {
-    const imageUrl = await generateImage(description); // Вызов функции генерации
+    // Настройки холста
+    const aspectRatio = 16 / 9; // Соотношение сторон 16:9
+    canvas.width = window.innerWidth * 0.8; // Ширина 80% экрана
+    canvas.height = canvas.width / aspectRatio; // Высота по соотношению
+    let brushColor = 'black'; // Цвет кисти
+    let brushSize = 6; // Размер кисти
+    let isDrawing = false; // Состояние рисования
 
-    // Создаем изображение и отображаем его на холсте
-    const img = new Image();
-    img.src = imageUrl;
-    img.onload = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height); // Очистка холста
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height); // Отображение изображения
-    };
-  } catch (error) {
-    alert('Ошибка при генерации изображения: ' + error.message);
-  }
-});
-
-// Функция для отправки запроса к API getimg.ai
-async function generateImage(prompt) {
-  const apiKey = 'key-1g3J4a66bacJYjzWoFhkMgUulxyqttEraGUQ2hTSDOKyH0p6sbQBOxkCKQHMZlJQvsFWjUJYx26m2zzIWnecQw6sAamRXfRo'; // ЗАМЕНИТЕ НА ВАШ API-КЛЮЧ
-  const url = 'https://api.getimg.ai/v1/image/generate';
-
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        prompt: prompt,
-        size: '512x512', // Размер изображения
-        num_images: 1 // Количество изображений
-      })
+    // Установка цвета кисти
+    colors.forEach(color => {
+      color.addEventListener('click', () => {
+        brushColor = color.dataset.color;
+      });
     });
 
-    if (!response.ok) {
-      throw new Error(`Ошибка API: ${response.status}`);
+    // Обновление размера кисти
+    brushSizeRange.addEventListener('input', () => {
+      brushSize = parseInt(brushSizeRange.value);
+    });
+
+    // Рисование кистью
+    canvas.addEventListener('mousedown', (e) => {
+      isDrawing = true;
+      draw(e);
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+      if (isDrawing) {
+        draw(e);
+      }
+    });
+
+    canvas.addEventListener('mouseup', () => {
+      isDrawing = false;
+    });
+
+    function draw(e) {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      ctx.beginPath();
+      ctx.arc(x, y, brushSize, 0, Math.PI * 2); // Круг с заданным размером
+      ctx.fillStyle = brushColor;
+      ctx.fill();
+      ctx.closePath();
     }
 
-    const data = await response.json();
-    if (data && data.images && data.images.length > 0) {
-      return data.images[0].url; // URL сгенерированного изображения
-    } else {
-      throw new Error('Не удалось получить изображение');
+    // Очистка холста
+    clearButton.addEventListener('click', () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    });
+
+    // Рисование круга
+    circleButton.addEventListener('click', () => {
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+      const radius = Math.min(canvas.width, canvas.height) / 4;
+
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+      ctx.fillStyle = brushColor;
+      ctx.fill();
+      ctx.closePath();
+    });
+
+    // Рисование квадрата
+    squareButton.addEventListener('click', () => {
+      const size = Math.min(canvas.width, canvas.height) / 4;
+      const startX = canvas.width / 2 - size / 2;
+      const startY = canvas.height / 2 - size / 2;
+
+      ctx.fillStyle = brushColor;
+      ctx.fillRect(startX, startY, size, size);
+    });
+
+    // Генерация рисунка через getimg.ai
+    aiGenerate.addEventListener('click', async () => {
+      const description = aiInput.value.trim();
+      if (!description) {
+        alert('Введите описание!');
+        return;
+      }
+
+      try {
+        const imageUrl = await generateImage(description);
+
+        // Создаем изображение и отображаем его на холсте
+        const img = new Image();
+        img.src = imageUrl;
+        img.onload = () => {
+          ctx.clearRect(0, 0, canvas.width, canvas.height); // Очистка холста
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height); // Отображение изображения
+        };
+      } catch (error) {
+        alert('Ошибка при генерации изображения: ' + error.message);
+      }
+    });
+
+    // Функция для отправки запроса к API getimg.ai
+    async function generateImage(prompt) {
+      const apiKey = 'key-1g3J4a66bacJYjzWoFhkMgUulxyqttEraGUQ2hTSDOKyH0p6sbQBOxkCKQHMZlJQvsFWjUJYx26m2zzIWnecQw6sAamRXfRo'; // ЗАМЕНИТЕ НА ВАШ API-КЛЮЧ
+      const url = 'https://api.getimg.ai/v1/image/generate';
+
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+          },
+          body: JSON.stringify({
+            prompt: prompt,
+            size: '512x512', // Размер изображения
+            num_images: 1 // Количество изображений
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`Ошибка API: ${response.status}`);
+        }
+
+        const data = await response.json();
+        if (data && data.images && data.images.length > 0) {
+          return data.images[0].url; // URL сгенерированного изображения
+        } else {
+          throw new Error('Не удалось получить изображение');
+        }
+      } catch (error) {
+        console.error(error);
+        throw error;
+      }
     }
-  } catch (error) {
-    console.error(error);
-    throw error; 
-  }
-}
   </script>
 </body>
 </html>
